@@ -35,7 +35,6 @@ ID = zeros(width,width); %Creat a width*width grid identity matrix
 ID(1:dis_i:width,1:dis_i:width) = 1; %1: inhibitory neurons; 0: excitatory neurons
 ID = logical(ID);
 
-
 %% Construct K filters (coupling)
 
 %Excitatory coupling filter
