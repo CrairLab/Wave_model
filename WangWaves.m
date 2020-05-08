@@ -23,7 +23,7 @@ de = 12; %spatial scale for Gaussian decay of excitatory couplings
 we = 0.23; %excitatory coupling strength
 wi = 0.23; %inhibitory coupling strength (balanced btw 0.23-0.35)
 width = 200; %width of the square network
-max_memory = 30; %memory of recent spikes, most recent 25ms;
+max_memory = 30; %memory of recent spikes, most recent 30ms; 
 max_steps = max_memory/dt; %corresponding maximum memory in steps
 runTime = 7.5*10^3; %Run 7.5s
 
@@ -52,8 +52,8 @@ y_idx = [-ri:ri];
 dis_square = x_idx.^2 + y_idx.^2;
 KIf = wi.*(dis_square<=ri^2);
 %KIf(:,1:ri) = KIf(:,1:ri) * 0.95;
-%KIf(:,ri+2:end) = KIf(:,ri+2:end) * 1.1;
-%KIf(1:ri,1:ri) = KIf(1:ri,1:ri) * 0.5;
+%KIf(:,ri+2:end) = KIf(:,ri+2:end) * 1.05;
+%KIf(1:ri,1:ri) = KIf(1:ri,1:ri) * 0.5; %Weaken strength in one quadrant
 KIf(ri+1,ri+1) = 0;
 
 
@@ -76,7 +76,7 @@ K_p = conv2(ID_p, KEf, 'same') + conv2(ID_p, KIf, 'same');
 K = K_p(rp+1:rp+width, rp+1:rp+width);
 %}
 
-%% Calculate time course of post-synaptic conductance
+%% Calculate time courses of post-synaptic conductance
 t = dt:dt:max_memory;
 ge_t = (exp(-t/tau_de)-exp(-t/tau_re))./(tau_de-tau_re);
 ge_t = ge_t';
@@ -88,7 +88,7 @@ gi_t = gi_t';
 V = rand(width, 'single').*(vt-vr) + vr; %Initialize Voltage matrix;
 GE = fe.*ones(width, 'single'); %initialize excitatory Conductance matrix
 GI = fi.*ones(width, 'single'); %initialize inhibitory Conductance matrix
-T = false(width*width,max_steps); %initialize spike matrix, only memorize the recent 50 steps
+T = false(width*width,max_steps); %initialize spike matrix, only memorize recent steps
 Refractory = zeros(width, 'single'); %initialize refractory matrix
 s = 0; %step 0
 
@@ -100,10 +100,10 @@ ID_p = ID_p(1+width-rp:2*width+rp, 1+width-rp:2*width+rp); %padded identity matr
 
 for t = 0:dt:runTime
     
-    %update refractory matrix
+    %Update refractory matrix
     Refractory = Refractory - dt; 
     
-    %select active neurons at this time
+    %Select active neurons at this time
     Active = Refractory<= 0; 
     
     %Current excitatory/inhibitory postsynaptic conductance matrices
@@ -111,12 +111,12 @@ for t = 0:dt:runTime
     curGi = reshape(T*gi_t, [width,width]);
       
     %Padding postsynaptic conductance matrices
-    curGe_p = repmat(curGe,[3,3]); %extend 2D identity matrix
+    curGe_p = repmat(curGe,[3,3]); %extend 2D identity matrix for periodic boundary condition
     curGe_p = curGe_p(1+width-rp:2*width+rp, 1+width-rp:2*width+rp); %padded identity matrix  
-    curGi_p = repmat(curGi,[3,3]); %extend 2D identity matrix  
+    curGi_p = repmat(curGi,[3,3]); %extend 2D identity matrix for periodic boundary condition 
     curGi_p = curGi_p(1+width-rp:2*width+rp, 1+width-rp:2*width+rp); %padded identity matrix
     
-    %Convolve postsynaptic conductance with couplting strength matrices
+    %Convolve postsynaptic conductance with coupling strength matrices
     %KG_p = conv2(~ID_p.*curGe_p, KEf, 'same') + conv2(ID_p.*curGi_p, KIf, 'same');
     KGe_p = conv2(~ID_p.*curGe_p, KEf, 'same');
     KGe = KGe_p(rp+1:rp+width, rp+1:rp+width);
@@ -127,13 +127,13 @@ for t = 0:dt:runTime
     GE = fe + KGe*1e3;
     GI = fi + KGi*1e3;
     
-    %calculate change of voltages for active neruons
+    %Calculate changes of voltage for active neruons
     dV = Active.*(1e-3.*dt*(-gl*(V-vl) - GE.*(V-ve) - GI.*(V-vi))/c); 
     
-    %update V
+    %Update V
     V = V+dV; 
     
-    %Display setteing
+    %Display setting
     imshow(mat2gray(V))
     %hold on
     colormap jet
@@ -143,10 +143,10 @@ for t = 0:dt:runTime
     curT = (V>=-55);
     %curT = Active&(V>=-55); %unecessary
        
-    %Neurons fired have V back to vr
+    %Neurons that fired have V back to vr
     V(curT) = vr;
     
-    %Mark neurons enter refractory periods
+    %Mark neurons that enter refractory periods
     Refractory(curT) = tau_rf;
     
     %Update spike matrix
