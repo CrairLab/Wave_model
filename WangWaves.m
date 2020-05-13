@@ -21,9 +21,9 @@ re = 10; %radius of excitatory connection
 ri = 15; %radius of inhibitory connection
 de = 12; %spatial scale for Gaussian decay of excitatory couplings
 we = 0.23; %excitatory coupling strength
-wi = 0.23; %inhibitory coupling strength (balanced btw 0.23-0.35)
-width = 200; %width of the square network
-max_memory = 30; %memory of recent spikes, most recent 30ms; 
+wi = 0.25; %inhibitory coupling strength (balanced btw 0.23-0.35)
+width = 300; %width of the square network
+max_memory = 30; %memory of recent spikes, most recent 50ms; 
 max_steps = max_memory/dt; %corresponding maximum memory in steps
 runTime = 7.5*10^3; %Run 7.5s
 
@@ -51,6 +51,7 @@ x_idx = [-ri:ri]';
 y_idx = [-ri:ri];
 dis_square = x_idx.^2 + y_idx.^2;
 KIf = wi.*(dis_square<=ri^2);
+%KIf = wi.*ones(2*ri+1);
 %KIf(:,1:ri) = KIf(:,1:ri) * 0.95;
 %KIf(:,ri+2:end) = KIf(:,ri+2:end) * 1.05;
 %KIf(1:ri,1:ri) = KIf(1:ri,1:ri) * 0.5; %Weaken strength in one quadrant
@@ -97,7 +98,6 @@ ID_p = repmat(ID,[3,3]); %extend 2D identity matrix
 rp = max(re,ri); %padding radius
 ID_p = ID_p(1+width-rp:2*width+rp, 1+width-rp:2*width+rp); %padded identity matrix
 
-
 for t = 0:dt:runTime
     
     %Update refractory matrix
@@ -134,10 +134,10 @@ for t = 0:dt:runTime
     V = V+dV; 
     
     %Display setting
-    imshow(mat2gray(V))
+    imshow(mat2gray(V,[-80, -55]))
     %hold on
-    colormap jet
-    pause(0.001)
+    %colormap jet
+    %pause(0.001)
     
     %Neurons that spike at this time
     curT = (V>=-55);
