@@ -115,14 +115,19 @@ if nargin < 3
     % Define bandpass range
     passed = zeros(1, length(L));
     ini = L(1)+1;
-    blue = passed; blue(450-ini:490-ini) = 1;
+    
+    %https://www.pveducation.org/pvcdrom/properties-of-sunlight/photon-flux
+    %https://www.omnicalculator.com/physics/photon-energy
+    % Also consider relative photon influx with espect to 460nm
+    blue = passed; blue(450-ini:490-ini) = 460./(450:490); 
+     
     filter_set.blue = blue;% Chroma 49002 (470/40)
-    uv = passed; uv(382-ini:408-ini) = 1;
+    uv = passed; uv(382-ini:408-ini) = 460./(382:408);
     filter_set.uv = uv; %Chroma 49028 (395/25)
-    %ir = passed; ir(610-ini:640-ini) = 1; %Chroma ET 625/30
-    ir = passed; ir(580-ini:630-ini) = 1; %Chroma ET 605/50
+    %ir = passed; ir(610-ini:640-ini) = 460./(610:640); %Chroma ET 625/30
+    ir = passed; ir(580-ini:630-ini) = 460./(580:630); %Chroma ET 605/50
     filter_set.ir = ir; 
-    tp = passed; tp(900-ini:940-ini) = 1;
+    tp = passed; tp(900-ini:940-ini) = 460./(900:940);
     filter_set.tp = tp; % Two photon
     
     % Define illumination power
